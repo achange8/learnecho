@@ -112,7 +112,7 @@ func mainJWT(c echo.Context) error {
 
 	log.Println("User name:", claims["name"], "User ID:", claims["jti"])
 
-	return c.String(http.StatusOK, " you are on the secrt page in jwt")
+	return c.JSON(http.StatusOK, " you are on the secrt page in jwt")
 }
 
 func login(c echo.Context) error {
@@ -129,29 +129,30 @@ func login(c echo.Context) error {
 
 		c.SetCookie(cookie)
 		//TODO: create jwt token
-		token, err := createJwtToken()
+		token, err := createJwtToken(userID)
 		if err != nil {
 			log.Println("Err Creating JWT token!", err)
 			return c.String(http.StatusInternalServerError, "some thing wrong")
 		}
 		JWTCookie := new(http.Cookie)
 
-		JWTCookie.Name = "JWT_Cookie"
+		JWTCookie.Name = "JWTCookie"
 		JWTCookie.Value = token
 		JWTCookie.Expires = time.Now().Add(24 * time.Hour)
 
 		c.SetCookie(JWTCookie)
+
 		return c.JSON(http.StatusOK, map[string]string{
 			"message": "You were logged in!",
 			"token":   token,
 		})
 	}
-	return c.String(http.StatusUnauthorized, "Worng imformation!")
+	return c.JSON(http.StatusUnauthorized, "Worng imformation!")
 }
 
-func createJwtToken() (string, error) {
+func createJwtToken(userID string) (string, error) {
 	claims := JwtClaims{
-		"osh",
+		userID,
 		jwt.StandardClaims{
 			Id:        "main_user_id",
 			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
