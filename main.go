@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
@@ -24,6 +25,11 @@ type Dog struct {
 type Pig struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
+}
+
+type JwtClaims struct {
+	Name string `json:"name"`
+	jwt.StandardClaims
 }
 
 func hello(c echo.Context) error {
@@ -99,6 +105,16 @@ func mainCookie(g echo.Context) error {
 	return g.String(http.StatusOK, "you are on secret cookie main page!")
 }
 
+func mainJWT(c echo.Context) error {
+	user := c.Get("user")
+	token := user.(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+
+	log.Println("User name:", claims["name"], "User ID:", claims["jti"])
+
+	return c.String(http.StatusOK, " you are on the secrt page in jwt")
+}
+
 func login(c echo.Context) error {
 	userID := c.QueryParam("userID")
 	password := c.QueryParam("password")
@@ -112,9 +128,42 @@ func login(c echo.Context) error {
 		cookie.Expires = time.Now().Add(24 * time.Hour)
 
 		c.SetCookie(cookie)
-		return c.String(http.StatusOK, "You were logged in!")
+		//TODO: create jwt token
+		token, err := createJwtToken()
+		if err != nil {
+			log.Println("Err Creating JWT token!", err)
+			return c.String(http.StatusInternalServerError, "some thing wrong")
+		}
+		JWTCookie := new(http.Cookie)
+
+		JWTCookie.Name = "JWT_Cookie"
+		JWTCookie.Value = token
+		JWTCookie.Expires = time.Now().Add(24 * time.Hour)
+
+		c.SetCookie(JWTCookie)
+		return c.JSON(http.StatusOK, map[string]string{
+			"message": "You were logged in!",
+			"token":   token,
+		})
 	}
 	return c.String(http.StatusUnauthorized, "Worng imformation!")
+}
+
+func createJwtToken() (string, error) {
+	claims := JwtClaims{
+		"osh",
+		jwt.StandardClaims{
+			Id:        "main_user_id",
+			ExpiresAt: time.Now().Add(24 * time.Hour).Unix(),
+		},
+	}
+	rawToken := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+
+	token, err := rawToken.SignedString([]byte("mySecret"))
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 
 ///////////////////////////middleware///////////////////////
@@ -154,6 +203,8 @@ func main() {
 
 	cookieGroup := e.Group("/cookie")
 
+	jwtGroup := e.Group("/jwt")
+
 	adminGroup.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: `[${time_rfc3339}] ${status} ${method} ${host} ${path} ${latency_human}` + "\n",
 	}))
@@ -165,12 +216,24 @@ func main() {
 		return false, nil
 	}))
 
+	jwtGroup.Use(middleware.JWTWithConfig(middleware.JWTConfig{
+		SigningMethod: "HS512",
+		SigningKey:    []byte("mySecret"),
+		TokenLookup:   "cookie:JWTCookie",
+		// - "query:<name>"
+		// - "cookie:<name>"
+	}))
+
 	cookieGroup.Use(checkCookie)
+
 	adminGroup.GET("/main", mainAdmin)
-	e.GET("/", hello)
-	e.GET("/login", login)
+
 	cookieGroup.GET("/main", mainCookie)
 
+	jwtGroup.GET("/main", mainJWT)
+
+	e.GET("/", hello)
+	e.GET("/login", login)
 	e.GET("/products/:id", getproducts)
 	e.POST("/products", addproduct)
 	e.POST("/dogs", addDog)
