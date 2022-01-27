@@ -21,7 +21,7 @@ func Login(c echo.Context) error {
 	//check userid and password against DB after hashing the password
 	if userID == "osh" && password == "1234" {
 		//create jwt access token
-		Access_Token, err := createAccessToken()
+		Access_Token, err := CreateAccessToken()
 		if err != nil {
 			log.Println("Err Creating JWT Access_Token!", err)
 			return c.String(http.StatusInternalServerError, "some thing wrong")
@@ -59,7 +59,7 @@ func Login(c echo.Context) error {
 }
 
 ////////////////////create Tokens///////////////////////////
-func createAccessToken() (string, error) {
+func CreateAccessToken() (string, error) {
 	claims := JwtClaims{
 		"osh",
 		jwt.StandardClaims{
