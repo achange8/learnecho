@@ -28,7 +28,7 @@ func Login(c echo.Context) error {
 		}
 		JWTCookie := new(http.Cookie)
 
-		JWTCookie.Name = "JWT_Access_CCookie"
+		JWTCookie.Name = "JWT_Access_Cookie"
 		JWTCookie.Value = Access_Token
 		JWTCookie.Expires = time.Now().Add(30 * time.Minute)
 		JWTCookie.HttpOnly = true
@@ -43,7 +43,7 @@ func Login(c echo.Context) error {
 		}
 		JWTRefreshCookie := new(http.Cookie)
 
-		JWTRefreshCookie.Name = "JWT_Access_CCookie"
+		JWTRefreshCookie.Name = "JWT_Access_Cookie"
 		JWTRefreshCookie.Value = Refresh_Token
 		JWTRefreshCookie.Expires = time.Now().Add(15 * time.Minute)
 		JWTRefreshCookie.HttpOnly = true
