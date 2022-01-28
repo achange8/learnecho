@@ -43,16 +43,17 @@ func Login(c echo.Context) error {
 		}
 		JWTRefreshCookie := new(http.Cookie)
 
-		JWTRefreshCookie.Name = "JWT_Access_Cookie"
+		JWTRefreshCookie.Name = "JWT_Refresh_Cookie"
 		JWTRefreshCookie.Value = Refresh_Token
-		JWTRefreshCookie.Expires = time.Now().Add(15 * time.Minute)
+		JWTRefreshCookie.Expires = time.Now().Add(24 * 7 * time.Hour)
 		JWTRefreshCookie.HttpOnly = true
 
 		c.SetCookie(JWTRefreshCookie)
 
 		return c.JSON(http.StatusOK, map[string]string{
-			"message":      "You were logged in!",
-			"Access_Token": Access_Token,
+			"message":       "You were logged in!",
+			"Access_Token":  Access_Token,
+			"refresh__oken": Refresh_Token,
 		})
 	}
 	return c.JSON(http.StatusUnauthorized, "Worng imformation!")

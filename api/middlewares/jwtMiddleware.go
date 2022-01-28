@@ -9,7 +9,7 @@ func SetjwtMiddleware(g *echo.Group) {
 	g.Use(middleware.JWTWithConfig(middleware.JWTConfig{
 		SigningMethod: "HS512",
 		SigningKey:    []byte("mySecret"),
-		TokenLookup:   "cookie:JWTCookie",
+		TokenLookup:   "cookie:JWT_Access_Cookie",
 	}))
 
 }
