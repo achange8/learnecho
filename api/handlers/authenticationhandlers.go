@@ -51,9 +51,9 @@ func Login(c echo.Context) error {
 		c.SetCookie(JWTRefreshCookie)
 
 		return c.JSON(http.StatusOK, map[string]string{
-			"message":       "You were logged in!",
-			"Access_Token":  Access_Token,
-			"refresh__oken": Refresh_Token,
+			"message":      "You were logged in!",
+			"Access_Token": Access_Token,
+			"refresh_oken": Refresh_Token,
 		})
 	}
 	return c.JSON(http.StatusUnauthorized, "Worng imformation!")
